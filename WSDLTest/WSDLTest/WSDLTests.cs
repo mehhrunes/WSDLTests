@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using NUnit;
 using NUnit.Framework;
+using System.Linq;
 using NUnit.Framework.Internal;
 using WSDLTest.Holiday;
 
@@ -18,7 +19,7 @@ namespace WSDLTest
         public static string TestData = String.Empty;
 
         // Max time for each test
-        public const int TestTimeout = 2000;
+        public const int TestTimeout = 100000;
 
         //Path to log with results
         public static string FilePath = @"G:\Report";
@@ -50,10 +51,43 @@ namespace WSDLTest
         /// <param name="country"></param>
         /// <param name="expectedCount"></param>
         [TestCaseSource(typeof(DataSource), nameof(DataSource.GetHolidaysAvailableData)), Timeout(TestTimeout)]
-        public void GetHolidayDate(Country country, int expectedCount)
+        public void GetHolidaysAvailable(Country country, int expectedCount)
         {
             var holidays = Client.GetHolidaysAvailable(country);
             Assert.AreEqual(holidays.Length, expectedCount);
+        }
+        /// <summary>
+        /// Check if we can get date for every holiday in every country
+        /// </summary>
+        [TestCaseSource(typeof(DataSource), nameof(DataSource.GetHolidayDateData)), Timeout(TestTimeout)]
+        public void GetHolidayDate(Country country, string holidayCode, int year)
+        {
+            var date = new DateTime();
+            try
+            {
+                date = Client.GetHolidayDate(country, holidayCode, year);
+            }
+            catch (Exception e)
+            {
+                if (!e.Message.Contains("The holiday code provided was invalid"))
+                    throw;
+            }
+            Assert.AreNotEqual(null, date);
+        }
+
+        [TestCase(Country.Canada, "", 2017, "holiday code provided was invalid")]
+        [TestCase(Country.Canada, "FLAG-DAY", 1699, "The year provided was invalid")]
+        public void GetHolidayDateExceptions(Country country, string holidayCode, int year,string exceptionMessage)
+        {
+            try
+            {
+                Client.GetHolidayDate(country, holidayCode, year);
+            }
+            catch (Exception e)
+            {
+               Assert.IsTrue(e.Message.Contains(exceptionMessage));
+            }
+            Assert.Fail("Exception expected!");
         }
 
         //Action that will be executed after each test
@@ -66,8 +100,8 @@ namespace WSDLTest
             }
             else
             {
-                TestData += TestContext.CurrentContext.Test.Name + " end with result Fail" 
-                    + Environment.NewLine + "With Message " + TestContext.CurrentContext.Result.Message + Environment.NewLine+ "Call stack: " + TestContext.CurrentContext.Result.StackTrace + System.Environment.NewLine;
+                TestData += TestContext.CurrentContext.Test.Name + " end with result Fail"
+                    + Environment.NewLine + "With Message " + TestContext.CurrentContext.Result.Message + Environment.NewLine + "Call stack: " + TestContext.CurrentContext.Result.StackTrace + System.Environment.NewLine;
             }
         }
         //Action that will be executed after all test
