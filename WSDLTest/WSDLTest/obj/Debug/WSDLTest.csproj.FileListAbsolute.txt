@@ -1,2 +1,0 @@
-D:\GITMY\WSDL\WSDLTest\WSDLTest\obj\Debug\WSDLTest.csprojResolveAssemblyReference.cache
-D:\GITMY\WSDL\WSDLTest\WSDLTest\obj\Debug\WSDLTest.csproj.CoreCompileInputs.cache

@@ -1,14 +1,27 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit;
+using NUnit.Framework;
+using NUnit.Framework.Internal;
+using WSDLTest.Holiday;
 
 namespace WSDLTest
 {
-    [TestClass]
-    public class UnitTest1
+    [TestFixture]
+    public class WSDLTests
     {
-        [TestMethod]
-        public void TestMethod1()
+        public HolidayService2Soap client;
+
+        [SetUp]
+        public void SetUp()
         {
+            client = new HolidayService2SoapClient();
         }
+        [Test]
+        public void GetCountriesAvailable()
+        {
+           var countries= client.GetCountriesAvailable();
+            
+        }
+        
     }
 }
