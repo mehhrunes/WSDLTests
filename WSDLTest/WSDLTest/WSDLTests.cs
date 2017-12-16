@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Configuration;
 using System.IO;
 using NUnit;
 using NUnit.Framework;
@@ -29,6 +30,7 @@ namespace WSDLTest
         public void SetUp()
         {
             Client = new HolidayService2SoapClient();
+
         }
         /// <summary>
         /// Get country using index and check description and coutry code
@@ -74,20 +76,85 @@ namespace WSDLTest
             }
             Assert.AreNotEqual(null, date);
         }
-
-        [TestCase(Country.Canada, "", 2017, "holiday code provided was invalid")]
+        /// <summary>
+        /// Check GetHolidayDateE exceptions
+        /// </summary>
+        /// <param name="country"></param>
+        /// <param name="holidayCode"></param>
+        /// <param name="year"></param>
+        /// <param name="exceptionMessage"></param>
+        [TestCase(Country.Canada, "", 2017, "holiday code provided was invalid"), Timeout(TestTimeout)]
         [TestCase(Country.Canada, "FLAG-DAY", 1699, "The year provided was invalid")]
-        public void GetHolidayDateExceptions(Country country, string holidayCode, int year,string exceptionMessage)
+        [TestCase(null, "FLAG-DAY", 2017, "The year provided was invalid")]
+        public void GetHolidayDateE(Country country, string holidayCode, int year, string exceptionMessage)
         {
             try
             {
-                Client.GetHolidayDate(country, holidayCode, year);
+                var date = Client.GetHolidayDate(country, holidayCode, year);
             }
             catch (Exception e)
             {
-               Assert.IsTrue(e.Message.Contains(exceptionMessage));
+                Assert.IsTrue(e.Message.Contains(exceptionMessage));
             }
             Assert.Fail("Exception expected!");
+        }
+
+        /// <summary>
+        /// Check GetHolidaysForDateRange exceptions
+        /// </summary>
+        /// <param name="country"></param>
+        /// <param name="starTime"></param>
+        /// <param name="endTime"></param>
+        [TestCaseSource(typeof(DataSource), nameof(DataSource.GetHolidaysForDateRangeE)), Timeout(TestTimeout)]
+        public void GetHolidaysForDateRangeE(Country country, DateTime starTime, DateTime endTime)
+        {
+            try
+            {
+                var holidays = Client.GetHolidaysForDateRange(country, starTime, endTime);
+            }
+            catch (Exception)
+            {
+                return; }
+            Assert.Fail("Exception expected");
+
+        }
+
+        /// <summary>
+        /// Check GetHolidaysForDateRange comparing to GetHolidaysForDateRange
+        /// </summary>
+        /// <param name="country"></param>
+        [TestCaseSource(typeof(DataSource), nameof(DataSource.CountryList)), Timeout(TestTimeout)]
+        public void GetHolidaysForDateRange(Country country)
+        {
+            var rangeHol=Client.GetHolidaysForDateRange(country, new DateTime(2017, 1, 1), new DateTime(2018, 1, 1));
+            var yearHol=Client.GetHolidaysForYear(country, 2017);
+            Assert.AreNotEqual(rangeHol,yearHol);
+        }
+
+        /// <summary>
+        /// Check GetHolidaysForMonth comparing to GetHolidaysForYear
+        /// </summary>
+        /// <param name="country"></param>
+        [TestCaseSource(typeof(DataSource), nameof(DataSource.CountryList)), Timeout(TestTimeout)]
+        public void GetHolidaysForMonth(Country country)
+        {
+            var holidays = Client.GetHolidaysForMonth(country, 2017, 1).ToList();
+            for (int i = 2; i <= 12; i++)
+            {
+                var holidays2=Client.GetHolidaysForMonth(country, 2017, i);
+                foreach (var holiday in holidays2)
+                {
+                    holidays.Add(holiday);
+                }
+            }
+            var year=Client.GetHolidaysForYear(country, 2017).ToList();
+            Assert.IsTrue(holidays.Count.Equals(year.Count));
+            int j = 0; // for better debuggin
+            foreach (var holiday in holidays)
+            {
+                Assert.AreEqual(year[j].Descriptor, holidays[j].Descriptor);
+                j++;
+            }
         }
 
         //Action that will be executed after each test
@@ -104,6 +171,7 @@ namespace WSDLTest
                     + Environment.NewLine + "With Message " + TestContext.CurrentContext.Result.Message + Environment.NewLine + "Call stack: " + TestContext.CurrentContext.Result.StackTrace + System.Environment.NewLine;
             }
         }
+
         //Action that will be executed after all test
         [OneTimeTearDown]
         public void FinalTearDown()
