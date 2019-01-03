@@ -85,9 +85,7 @@ namespace WSDLTest
         /// <param name="exceptionMessage"></param>
         [Ignore("For some reason")]
         [TestCase(Country.Canada, "", 2017, "holiday code provided was invalid"), Timeout(TestTimeout)]
-        [Ignore("For some reason")]
         [TestCase(Country.Canada, "FLAG-DAY", 1699, "The year provided was invalid")]
-        [Ignore("For some reason")]
         [TestCase(null, "FLAG-DAY", 2017, "The year provided was invalid")]
         public void GetHolidayDateE(Country country, string holidayCode, int year, string exceptionMessage)
         {
