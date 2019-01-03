@@ -23,7 +23,7 @@ namespace WSDLTest
         public const int TestTimeout = 100000;
 
         //Path to log with results
-        public static string FilePath = @"G:\Report";
+        public static string FilePath = TestContext.CurrentContext.WorkDirectory;
 
         //Action that will be executed before each test
         [SetUp]
